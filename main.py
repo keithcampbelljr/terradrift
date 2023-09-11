@@ -1,22 +1,25 @@
+import click
+from drift_detection import state_drift_detection
 from python_terraform import Terraform
-from drift_detection import detect_state_drift
-from helper import format_terraform_plan_output
 
-terraform = Terraform()
+def run_drift_detect() -> None:
+    try: 
+        terraform = Terraform()
+        terraform.init()
+        terraform_plan = terraform.plan(json=True)
 
-try:
+        state_drift_detection(plan=terraform_plan)
 
-    terraform.init()
-    terraform_plan = terraform.plan(json=True)
+    except Exception as e:
+        click.echo(f"An error occurred: {str(e)}")
 
-    formatted_terraform_plan_output = format_terraform_plan_output(plan=terraform_plan)
-    state_drift_detected = detect_state_drift(plan=formatted_terraform_plan_output)
-    
-    if state_drift_detected:
-        print("state drift detected..")
-    else:
-        print("no state drift..")
+@click.group()
+def cli():
+    pass
 
-except Exception as e:
-    print(f"An error occurred: {str(e)}")
+@cli.command()
+def detect():
+    run_drift_detect()
 
+if __name__ == "__main__":
+    cli()
